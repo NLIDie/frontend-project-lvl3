@@ -2,9 +2,9 @@
 
 import { promises as fs } from 'fs';
 import path from 'path';
-import { beforeEach, test, expect } from '@jest/globals';
+import { screen } from '@testing-library/dom';
 
-import init from '../src/init';
+import '@testing-library/jest-dom';
 
 beforeEach(async () => {
   const pathToHtml = path.resolve(__dirname, '__fixtures__/index.html');
@@ -12,7 +12,10 @@ beforeEach(async () => {
   document.body.innerHTML = html;
 });
 
-test('init', () => {
-  init();
-  expect(true).toBeDefined();
+test('rss-form', async () => {
+  const rssURLField = await screen.findByTestId('rss-url-field');
+  const rssBtnSubmit = await screen.findByTestId('rss-btn-submit');
+
+  expect(rssURLField).toBeInTheDocument();
+  expect(rssBtnSubmit).toBeInTheDocument();
 });
