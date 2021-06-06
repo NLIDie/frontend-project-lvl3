@@ -19,11 +19,7 @@ const handleForm = (elements, state, i18nTranslate) => {
 
 const loadingProcessStatusMapping = {
   idle: (elements, _, i18nTranslate) => {
-    const {
-      submit,
-      input,
-      feedback,
-    } = elements;
+    const { submit, input, feedback } = elements;
 
     submit.disabled = false;
     input.removeAttribute('readonly');
@@ -34,11 +30,7 @@ const loadingProcessStatusMapping = {
   },
 
   failed: (elements, state, i18nTranslate) => {
-    const {
-      submit,
-      input,
-      feedback,
-    } = elements;
+    const { submit, input, feedback } = elements;
 
     submit.disabled = false;
     input.removeAttribute('readonly');
@@ -47,11 +39,7 @@ const loadingProcessStatusMapping = {
   },
 
   loading: (elements) => {
-    const {
-      submit,
-      input,
-      feedback,
-    } = elements;
+    const { submit, input, feedback } = elements;
 
     submit.disabled = true;
     input.setAttribute('readonly', true);
@@ -61,21 +49,19 @@ const loadingProcessStatusMapping = {
   },
 };
 
-const handleLoadingProcessStatus = (elements, state) => {
-  const {
-    loadingProcess,
-  } = state;
+const handleLoadingProcessStatus = (elements, state, i18nTranslate) => {
+  const { loadingProcess } = state;
 
   if (!_has(loadingProcessStatusMapping, loadingProcess.status)) {
     throw new Error(`Unknown loadingProcess status: '${loadingProcess.status}'`);
   }
 
-  loadingProcessStatusMapping[loadingProcess.status](elements, state);
+  loadingProcessStatusMapping[loadingProcess.status](elements, state, i18nTranslate);
 };
 
 const handleFeeds = (elements, state, i18nTranslate) => {
-  const { feeds } = state;
   const { feedsContainer } = elements;
+  const { feeds } = state;
 
   const feedsListTemplate = feeds.map((feed) => (`
     <li class="list-group-item border-0 border-end-0">
@@ -87,7 +73,7 @@ const handleFeeds = (elements, state, i18nTranslate) => {
   const rootTemplate = `
     <div class='card border-0'>
       <div class="card-body">
-        <h2 class="card-title h4">${i18nTranslate.t('feeds')}</h2>
+        <h2 class="card-title h4">${i18nTranslate('feeds')}</h2>
       </div>
       <ul class='list-group border-0 rounded-0'>
         ${feedsListTemplate}
@@ -99,13 +85,18 @@ const handleFeeds = (elements, state, i18nTranslate) => {
 };
 
 const handlePosts = (elements, state, i18nTranslate) => {
-  const { posts } = state;
   const { postsContainer } = elements;
+  const { posts, seenPosts } = state;
 
-  const postsListTemplate = posts.map((post) => `
+  const postsListTemplate = posts.map((post) => {
+    const linkClasses = seenPosts.has(post.id)
+      ? 'fw-normal link-secondary'
+      : 'fw-bold';
+
+    return `
       <li class="list-group-item d-flex justify-content-between align-items-start border-0 border-end-0">
         <a
-          class="fw-bold"
+          class="${linkClasses}"
           href="${post.link}"
           data-id="${post.id}"
           target="_blank"
@@ -116,11 +107,12 @@ const handlePosts = (elements, state, i18nTranslate) => {
           class="btn btn-outline-primary btn-sm"
           type="button"
           data-id="${post.id}"
-          data-bsToggle="modal"
-          data-bsTarget="#modal"
+          data-bs-toggle="modal"
+          data-bs-target="#modal"
         >${i18nTranslate('preview')}</button>
       </li>
-    `).join('\n');
+    `;
+  }).join('\n');
 
   const rootTemplate = `
     <div class="card border-0">
@@ -137,11 +129,28 @@ const handlePosts = (elements, state, i18nTranslate) => {
   postsContainer.innerHTML = rootTemplate.trim();
 };
 
+const handleModal = (elements, state) => {
+  const { modal: modalElem } = elements;
+  const { posts, modal } = state;
+
+  const titleElem = modalElem.querySelector('.modal-title');
+  const bodyElem = modalElem.querySelector('.modal-body');
+  const fullArticleBtnElem = modalElem.querySelector('.full-article');
+
+  const post = posts.find(({ id }) => id === modal.postId);
+
+  titleElem.textContent = post.title;
+  bodyElem.textContent = post.description;
+  fullArticleBtnElem.href = post.link;
+};
+
 const watchedStatePathMapping = {
   form: handleForm,
   'loadingProcess.status': handleLoadingProcessStatus,
   feeds: handleFeeds,
   posts: handlePosts,
+  seenPosts: handlePosts,
+  'modal.postId': handleModal,
 };
 
 export default (elements, initState, i18nTranslate) => onChange(initState, (path) => {

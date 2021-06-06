@@ -4,6 +4,7 @@
   "description": "Третий проект frontend професии на hexlet.io",
   "main": "src/index.js",
   "scripts": {
+    "start": "webpack serve",
     "test": "jest --colors"
   },
   "engines": {

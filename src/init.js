@@ -1,10 +1,13 @@
 // @ts-check
 
+import 'bootstrap/js/dist/modal';
+
 import axios from 'axios';
 import * as yup from 'yup';
 import { nanoid } from 'nanoid';
 import i18next from 'i18next';
 import _differenceWith from 'lodash/differenceWith';
+import _has from 'lodash/has';
 
 import locales from './locales';
 import parseRss from './rss';
@@ -71,8 +74,8 @@ const fetchRss = (state, url) => {
       });
       const posts = rssData.items.map((item) => makePost({ ...item, channelId: feed.id }));
 
-      state.feeds.unshift(feed);
-      state.posts.unshift(...posts);
+      state.feeds = [feed, ...state.feeds];
+      state.posts = [...posts, ...state.posts];
 
       state.loadingProcess.status = 'idle';
       state.loadingProcess.error = null;
@@ -124,6 +127,7 @@ export default () => {
   const initState = {
     feeds: [],
     posts: [],
+    seenPosts: new Set(),
     loadingProcess: {
       status: 'idle',
       error: null,
@@ -132,6 +136,9 @@ export default () => {
       error: null,
       status: 'filling',
       valid: false,
+    },
+    modal: {
+      postId: null,
     },
   };
 
@@ -142,6 +149,7 @@ export default () => {
     submit: document.querySelector('.rss-form button[type="submit"]'),
     feedsContainer: document.querySelector('.feeds'),
     postsContainer: document.querySelector('.posts'),
+    modal: document.querySelector('#modal'),
   };
 
   i18next
@@ -200,6 +208,16 @@ export default () => {
         };
 
         fetchRss(state, rssUrl);
+      });
+
+      elements.postsContainer.addEventListener('click', (evt) => {
+        if (!_has(evt.target.dataset, 'id')) {
+          return;
+        }
+
+        const { id } = evt.target.dataset;
+        state.modal.postId = id;
+        state.seenPosts.add(id);
       });
 
       setTimeout(() => fetchNewPosts(state), fetchingTimeout);
