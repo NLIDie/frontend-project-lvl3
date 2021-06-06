@@ -4,10 +4,13 @@ import axios from 'axios';
 import * as yup from 'yup';
 import { nanoid } from 'nanoid';
 import i18next from 'i18next';
+import _differenceWith from 'lodash/differenceWith';
 
 import locales from './locales';
 import parseRss from './rss';
 import watch from './view';
+
+const fetchingTimeout = 5000;
 
 const getUrlWithProxy = (url) => {
   const urlWithProxy = new URL('/get', 'https://hexlet-allorigins.herokuapp.com');
@@ -87,6 +90,34 @@ const fetchRss = (state, url) => {
     });
 
   return promise;
+};
+
+const fetchNewPosts = (state) => {
+  const promises = state.feeds.map((feed) => (
+    axios
+      .get(getUrlWithProxy(feed.url))
+      .then((response) => {
+        const feedData = parseRss(response.data.contents);
+
+        const newPosts = feedData.items.map((postData) => (
+          makePost({ ...postData, channelId: feed.id })
+        ));
+        const oldPosts = state.posts.filter((post) => post.channelId === feed.id);
+
+        const posts = _differenceWith(
+          newPosts,
+          oldPosts,
+          (post1, post2) => post1.link === post2.link,
+        ).map(makePost);
+
+        state.posts = [...posts, ...state.posts];
+      })
+      .catch(console.error)
+  ));
+
+  Promise
+    .all(promises)
+    .finally(() => setTimeout(() => fetchNewPosts(state), fetchingTimeout));
 };
 
 export default () => {
@@ -170,5 +201,7 @@ export default () => {
 
         fetchRss(state, rssUrl);
       });
+
+      setTimeout(() => fetchNewPosts(state), fetchingTimeout);
     });
 };
