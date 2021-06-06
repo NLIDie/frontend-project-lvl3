@@ -3,7 +3,9 @@
 import axios from 'axios';
 import * as yup from 'yup';
 import { nanoid } from 'nanoid';
+import i18next from 'i18next';
 
+import locales from './locales';
 import parseRss from './rss';
 import watch from './view';
 
@@ -111,48 +113,62 @@ export default () => {
     postsContainer: document.querySelector('.posts'),
   };
 
-  const urlSchema = yup
-    .string()
-    .url('notUrl')
-    .required('required');
+  i18next
+    .createInstance()
+    .init({
+      lng: 'ru',
+      debug: false,
+      resources: {
+        ru: locales.ru,
+        en: locales.en,
+      },
+    })
+    .then((i18nTranslate) => {
+      yup.setLocale(locales.yup);
 
-  const validateRssUrl = (url, feeds) => {
-    const feedUrls = feeds.map((feed) => feed.url);
-    const actualUrlSchema = urlSchema.notOneOf(feedUrls, 'exists');
+      const urlSchema = yup
+        .string()
+        .url('notUrl')
+        .required('required');
 
-    try {
-      actualUrlSchema.validateSync(url);
-      return null;
-    } catch (err) {
-      return err.message;
-    }
-  };
+      const validateRssUrl = (url, feeds) => {
+        const feedUrls = feeds.map((feed) => feed.url);
+        const actualUrlSchema = urlSchema.notOneOf(feedUrls, 'exists');
 
-  const state = watch(elements, initState);
-
-  elements.form.addEventListener('submit', (evt) => {
-    evt.preventDefault();
-
-    const formData = new FormData(evt.target);
-    const rssUrl = formData.get('url');
-
-    const err = validateRssUrl(rssUrl, state.feeds);
-    if (err !== null) {
-      state.form = {
-        ...state.form,
-        valid: false,
-        error: err,
+        try {
+          actualUrlSchema.validateSync(url);
+          return null;
+        } catch (err) {
+          return err.message;
+        }
       };
 
-      return;
-    }
+      const state = watch(elements, initState, i18nTranslate);
 
-    state.form = {
-      ...state.form,
-      valid: true,
-      error: null,
-    };
+      elements.form.addEventListener('submit', (evt) => {
+        evt.preventDefault();
 
-    fetchRss(state, rssUrl);
-  });
+        const formData = new FormData(evt.target);
+        const rssUrl = formData.get('url');
+
+        const err = validateRssUrl(rssUrl, state.feeds);
+        if (err !== null) {
+          state.form = {
+            ...state.form,
+            valid: false,
+            error: err,
+          };
+
+          return;
+        }
+
+        state.form = {
+          ...state.form,
+          valid: true,
+          error: null,
+        };
+
+        fetchRss(state, rssUrl);
+      });
+    });
 };

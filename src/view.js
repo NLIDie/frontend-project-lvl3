@@ -3,16 +3,7 @@
 import onChange from 'on-change';
 import _has from 'lodash/has';
 
-const errorTextMapping = {
-  noRss: 'Ресурс не содержит валидный RSS',
-  network: 'Ошибка сети',
-  unknown: 'Неизвестная ошибка. Что-то пошло не так.',
-  exists: 'RSS уже существует',
-  required: 'Не должно быть пустым',
-  notUrl: 'Ссылка должна быть валидным URL',
-};
-
-const handleForm = (elements, state) => {
+const handleForm = (elements, state, i18nTranslate) => {
   const { form: { valid, error } } = state;
   const { input, feedback } = elements;
 
@@ -23,11 +14,11 @@ const handleForm = (elements, state) => {
 
   input.classList.add('is-invalid');
   feedback.classList.add('text-danger');
-  feedback.textContent = errorTextMapping[error];
+  feedback.textContent = i18nTranslate([`errors.${error}`, 'errors.unknown']);
 };
 
 const loadingProcessStatusMapping = {
-  idle: (elements) => {
+  idle: (elements, _, i18nTranslate) => {
     const {
       submit,
       input,
@@ -38,11 +29,11 @@ const loadingProcessStatusMapping = {
     input.removeAttribute('readonly');
     input.value = '';
     feedback.classList.add('text-success');
-    feedback.textContent = 'RSS успешно загружен';
+    feedback.textContent = i18nTranslate('loading.success');
     input.focus();
   },
 
-  failed: (elements, state) => {
+  failed: (elements, state, i18nTranslate) => {
     const {
       submit,
       input,
@@ -52,7 +43,7 @@ const loadingProcessStatusMapping = {
     submit.disabled = false;
     input.removeAttribute('readonly');
     feedback.classList.add('text-danger');
-    feedback.textContent = errorTextMapping[state.loadingProcess.error];
+    feedback.textContent = i18nTranslate([`errors.${state.loadingProcess.error}`, 'errors.unknown']);
   },
 
   loading: (elements) => {
@@ -82,7 +73,7 @@ const handleLoadingProcessStatus = (elements, state) => {
   loadingProcessStatusMapping[loadingProcess.status](elements, state);
 };
 
-const handleFeeds = (elements, state) => {
+const handleFeeds = (elements, state, i18nTranslate) => {
   const { feeds } = state;
   const { feedsContainer } = elements;
 
@@ -96,7 +87,7 @@ const handleFeeds = (elements, state) => {
   const rootTemplate = `
     <div class='card border-0'>
       <div class="card-body">
-        <h2 class="card-title h4">Фиды</h2>
+        <h2 class="card-title h4">${i18nTranslate.t('feeds')}</h2>
       </div>
       <ul class='list-group border-0 rounded-0'>
         ${feedsListTemplate}
@@ -107,7 +98,7 @@ const handleFeeds = (elements, state) => {
   feedsContainer.innerHTML = rootTemplate.trim();
 };
 
-const handlePosts = (elements, state) => {
+const handlePosts = (elements, state, i18nTranslate) => {
   const { posts } = state;
   const { postsContainer } = elements;
 
@@ -127,14 +118,14 @@ const handlePosts = (elements, state) => {
           data-id="${post.id}"
           data-bsToggle="modal"
           data-bsTarget="#modal"
-        >Просмотр</button>
+        >${i18nTranslate('preview')}</button>
       </li>
     `).join('\n');
 
   const rootTemplate = `
     <div class="card border-0">
       <div class="card-body">
-        <h2 class="card-title h4">Посты</h2>
+        <h2 class="card-title h4">${i18nTranslate('posts')}</h2>
       </div>
 
       <ul class="list-group border-0 rounded-0">
@@ -153,8 +144,8 @@ const watchedStatePathMapping = {
   posts: handlePosts,
 };
 
-export default (elements, initState) => onChange(initState, (path) => {
+export default (elements, initState, i18nTranslate) => onChange(initState, (path) => {
   if (_has(watchedStatePathMapping, path)) {
-    watchedStatePathMapping[path](elements, initState);
+    watchedStatePathMapping[path](elements, initState, i18nTranslate);
   }
 });
