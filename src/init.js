@@ -26,7 +26,7 @@ const getUrlWithProxy = (url) => {
 
 const getErrorType = (err) => {
   if (err.isParsingError) {
-    return 'rss';
+    return 'noRss';
   }
 
   if (err.isAxiosError) {
