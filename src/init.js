@@ -92,7 +92,7 @@ const fetchRss = (state, url) => {
       };
     })
     .catch((err) => {
-      console.error(err);
+      console.log(err);
       state.loadingProcess = {
         status: 'failed',
         error: getErrorType(err),
@@ -122,7 +122,7 @@ const fetchNewPosts = (state) => {
 
         state.posts = [...posts, ...state.posts];
       })
-      .catch(console.error)
+      .catch(console.log)
   ));
 
   Promise
