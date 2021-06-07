@@ -1,8 +1,8 @@
 // @ts-check
 
 class RSSParsingError extends Error {
-  constructor(message) {
-    super(message);
+  constructor(...params) {
+    super(...params);
     this.isParsingError = true;
   }
 }
@@ -12,7 +12,7 @@ export default (data) => {
   const rssDOM = parser.parseFromString(data, 'text/xml');
 
   const parserError = rssDOM.querySelector('parsererror');
-  if (parserError === undefined) {
+  if (parserError) {
     throw new RSSParsingError(parserError.textContent);
   }
 

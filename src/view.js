@@ -31,11 +31,12 @@ const loadingProcessStatusMapping = {
 
   failed: (elements, state, i18nTranslate) => {
     const { submit, input, feedback } = elements;
+    const { loadingProcess } = state;
 
     submit.disabled = false;
     input.removeAttribute('readonly');
     feedback.classList.add('text-danger');
-    feedback.textContent = i18nTranslate([`errors.${state.loadingProcess.error}`, 'errors.unknown']);
+    feedback.textContent = i18nTranslate([`errors.${loadingProcess.error}`, 'errors.unknown']);
   },
 
   loading: (elements) => {
@@ -146,7 +147,7 @@ const handleModal = (elements, state) => {
 
 const watchedStatePathMapping = {
   form: handleForm,
-  'loadingProcess.status': handleLoadingProcessStatus,
+  loadingProcess: handleLoadingProcessStatus,
   feeds: handleFeeds,
   posts: handlePosts,
   seenPosts: handlePosts,

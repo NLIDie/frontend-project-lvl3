@@ -61,7 +61,10 @@ const makePost = ({
 });
 
 const fetchRss = (state, url) => {
-  state.loadingProcess.status = 'loading';
+  state.loadingProcess = {
+    status: 'loading',
+    error: null,
+  };
 
   const promise = axios.get(getUrlWithProxy(url), { timeout: 10000 })
     .then((response) => {
@@ -77,8 +80,10 @@ const fetchRss = (state, url) => {
       state.feeds = [feed, ...state.feeds];
       state.posts = [...posts, ...state.posts];
 
-      state.loadingProcess.status = 'idle';
-      state.loadingProcess.error = null;
+      state.loadingProcess = {
+        status: 'idle',
+        error: null,
+      };
 
       state.form = {
         ...state.form,
@@ -88,8 +93,10 @@ const fetchRss = (state, url) => {
     })
     .catch((err) => {
       console.error(err);
-      state.loadingProcess.status = 'failed';
-      state.loadingProcess.error = getErrorType(err);
+      state.loadingProcess = {
+        status: 'failed',
+        error: getErrorType(err),
+      };
     });
 
   return promise;
