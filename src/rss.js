@@ -1,19 +1,15 @@
 // @ts-check
 
-class RSSParsingError extends Error {
-  constructor(...params) {
-    super(...params);
-    this.isParsingError = true;
-  }
-}
-
 export default (data) => {
   const parser = new DOMParser();
   const rssDOM = parser.parseFromString(data, 'text/xml');
 
   const parserError = rssDOM.querySelector('parsererror');
   if (parserError) {
-    throw new RSSParsingError(parserError.textContent);
+    const err = new Error(parserError.textContent);
+    err.isParsingError = true;
+
+    throw err;
   }
 
   const channelTitleElem = rssDOM.querySelector('channel > title');
