@@ -12,5 +12,5 @@ make install
 
 ## Run
 ```sh
-make develop
+make start
 ```
